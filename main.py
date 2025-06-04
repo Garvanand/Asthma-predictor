@@ -11,10 +11,7 @@ import os
 from dotenv import load_dotenv
 import time
 
-# Load environment variables
 load_dotenv()
-
-# Page configuration
 st.set_page_config(
     page_title="AI-Powered Asthma Detection & Risk Assessment",
     page_icon="🫁",
@@ -22,7 +19,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Enhanced CSS for professional appearance
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -254,10 +250,8 @@ def load_model():
     try:
         return load('rf_asthma_model_prediction.pkl')
     except:
-        # Fallback for demo purposes
         from sklearn.ensemble import RandomForestClassifier
         model = RandomForestClassifier(n_estimators=100, random_state=42)
-        # Create dummy training data
         X_dummy = np.random.rand(1000, 14)
         y_dummy = np.random.choice([1, 2, 3], 1000)
         model.fit(X_dummy, y_dummy)
@@ -265,7 +259,6 @@ def load_model():
 
 model = load_model()
 
-# Function to create symptom severity chart
 def create_symptom_chart(symptoms):
     symptom_names = list(symptoms.keys())
     symptom_values = [1 if val == 'Yes' else 0 for val in symptoms.values()]
@@ -299,7 +292,6 @@ def create_symptom_chart(symptoms):
     
     return fig
 
-# Function to create risk assessment gauge
 def create_risk_gauge(prediction_score):
     risk_levels = {
         "No Asthma": 0.2,
@@ -343,9 +335,7 @@ def create_risk_gauge(prediction_score):
     
     return fig
 
-# Function to create demographic analysis
 def create_demographic_chart(age_group, gender):
-    # Sample data for comparison (in real app, this would come from your database)
     demo_data = pd.DataFrame({
         'Age Group': ['0-9', '10-19', '20-24', '25-59', '60+'],
         'Asthma Prevalence': [8.5, 9.2, 7.1, 8.0, 8.8],
@@ -379,13 +369,9 @@ def create_demographic_chart(age_group, gender):
     
     return fig
 
-# Function to create air quality visualization
 def create_air_quality_chart():
-    # Mock air quality data (replace with real API data)
     dates = pd.date_range(start=datetime.now() - timedelta(days=7), end=datetime.now(), freq='D')
     aqi_values = np.random.randint(50, 150, len(dates))
-    
-    # Store the latest AQI value for use in other visualizations
     st.session_state['latest_aqi'] = aqi_values[-1]
     
     fig = go.Figure()
@@ -399,7 +385,6 @@ def create_air_quality_chart():
         marker=dict(size=8)
     ))
     
-    # Add threshold lines
     fig.add_hline(y=100, line_dash="dash", line_color="orange", 
                   annotation_text="Unhealthy for Sensitive Groups")
     fig.add_hline(y=150, line_dash="dash", line_color="red", 
@@ -422,7 +407,6 @@ def create_air_quality_chart():
     
     return fig
 
-# Function to preprocess inputs
 def preprocess_inputs(symptoms, age_group, gender):
     symptom_values = [1 if symptom == 'Yes' else 0 for symptom in symptoms.values()]
     
@@ -447,7 +431,6 @@ def preprocess_inputs(symptoms, age_group, gender):
     
     return inputs_df
 
-# Function to get detailed recommendations
 def get_recommendations(prediction):
     recommendations = {
         "Mild Asthma": {
@@ -513,12 +496,10 @@ def get_recommendations(prediction):
     }
     return recommendations.get(prediction, recommendations["No Asthma"])
 
-# Update the fetch_air_quality_data function
 def fetch_air_quality_data(location):
     api_key = os.getenv('X-API-Key')
     
     try:
-        # Get the latest measurements for all parameters
         measurements_url = f"https://api.openaq.org/v3/measurements?location={location}&limit=1000"
         headers = {'X-API-Key': api_key}
         
@@ -529,7 +510,6 @@ def fetch_air_quality_data(location):
         if not data.get('results'):
             return None, "No air quality data available for this location."
         
-        # Initialize pollutants dictionary
         pollutants = {
             'PM2.5': 0,
             'PM10': 0,
@@ -539,18 +519,15 @@ def fetch_air_quality_data(location):
             'CO': 0
         }
         
-        # Get the most recent measurement for each pollutant
         latest_measurements = {}
         for result in data['results']:
             parameter = result.get('parameter')
             if parameter in pollutants and parameter not in latest_measurements:
                 latest_measurements[parameter] = result.get('value', 0)
         
-        # Update pollutants with latest measurements
         for param, value in latest_measurements.items():
             pollutants[param] = value
         
-        # Calculate AQI based on PM2.5
         pm25 = pollutants['PM2.5']
         if pm25 <= 12:
             aqi = pm25 * 4.17  # Good
@@ -576,7 +553,6 @@ def fetch_air_quality_data(location):
         return None, f"Error fetching air quality data: {str(e)}"
 
 def create_air_quality_index_gauge(aqi_value):
-    # Define AQI ranges and colors
     aqi_ranges = [
         {'range': [0, 50], 'color': 'green', 'name': 'Good'},
         {'range': [51, 100], 'color': 'yellow', 'name': 'Moderate'},
@@ -586,7 +562,6 @@ def create_air_quality_index_gauge(aqi_value):
         {'range': [301, 500], 'color': 'maroon', 'name': 'Hazardous'}
     ]
     
-    # Get the current AQI category
     current_category = next((r['name'] for r in aqi_ranges if r['range'][0] <= aqi_value <= r['range'][1]), 'Unknown')
     
     fig = go.Figure(go.Indicator(
@@ -622,7 +597,6 @@ def create_air_quality_index_gauge(aqi_value):
     return fig
 
 def create_pollutant_breakdown(pollutants):
-    # Define color scale based on values
     colors = ['#00ff00', '#ffff00', '#ffa500', '#ff0000', '#800080', '#800000']
     
     fig = go.Figure(data=[
@@ -652,9 +626,7 @@ def create_pollutant_breakdown(pollutants):
     
     return fig
 
-# Main application
 def main():
-    # Header Section
     st.markdown("""
     <div class="header-section">
         <div class="header-title">🫁 AI-Powered Asthma Detection</div>
@@ -662,7 +634,6 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Sidebar with professional information
     with st.sidebar:
         st.markdown("""
         <div class="sidebar-section">
@@ -917,7 +888,6 @@ def main():
                 st.session_state['report_data'] = report_data
                 st.success('✅ Report generated successfully!')
                 
-                # Display summary
                 st.markdown("### �� Assessment Summary")
                 st.json({
                     "Risk Level": prediction_text,
